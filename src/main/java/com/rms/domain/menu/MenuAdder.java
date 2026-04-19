@@ -11,8 +11,10 @@ class MenuAdder {
 
     private final MenuItemRepository menuItemRepository;
     private final MenuItemMapper menuItemMapper;
+    private final MenuRetriever menuRetriever;
 
     CreateMenuItemResponseDto addMenuItem(CreateMenuItemRequestDto request) {
+        menuRetriever.validateNameNotExists(request.name());
         MenuItemEntity newMenuItem = MenuItemEntity.builder()
                 .name(request.name())
                 .description(request.description())

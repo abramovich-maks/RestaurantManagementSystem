@@ -29,4 +29,10 @@ class MenuRetriever {
         return menuItemRepository.findById(id)
                 .orElseThrow(() -> new MenuItemNotFoundException(id));
     }
+
+    void validateNameNotExists(String name) {
+        if (menuItemRepository.existsByName(name)) {
+            throw new MenuItemAlreadyExistsException(name);
+        }
+    }
 }
