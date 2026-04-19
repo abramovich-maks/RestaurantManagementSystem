@@ -1,4 +1,4 @@
-package com.rms.infrastructure.menu.controller;
+package com.rms.infrastructure.menu.controller.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;

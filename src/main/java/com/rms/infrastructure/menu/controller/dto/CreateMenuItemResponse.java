@@ -1,4 +1,4 @@
-package com.rms.infrastructure.menu.controller;
+package com.rms.infrastructure.menu.controller.dto;
 
 import java.math.BigDecimal;
 

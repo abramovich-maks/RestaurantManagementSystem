@@ -1,8 +1,9 @@
-package com.rms.domain.menu.dto;
+package com.rms.infrastructure.menu.controller.dto;
 
 import java.math.BigDecimal;
 
-public record UpdateMenuItemRequestDto(
+public record MenuItemResponse(
+        Long id,
         String name,
         String description,
         BigDecimal price,

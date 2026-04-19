@@ -10,6 +10,6 @@ public record UpdateMenuItemResponseDto(
         String name,
         String description,
         BigDecimal price,
-        Boolean isAvailable
+        Boolean available
 ) {
 }
