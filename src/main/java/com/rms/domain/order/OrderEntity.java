@@ -29,6 +29,9 @@ public class OrderEntity {
     @Column(name = "id", nullable = false)
     private Long id;
 
+    @Column(name = "waiter_id")
+    private Long waiterId;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
