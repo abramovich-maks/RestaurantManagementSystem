@@ -18,7 +18,7 @@ import java.math.BigDecimal;
 @Setter
 @Entity
 @Table(name = "order_items")
-public class OrderItemEntity {
+class OrderItemEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "order_items_seq")
     @SequenceGenerator(name = "order_items_seq")

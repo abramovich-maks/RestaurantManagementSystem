@@ -21,7 +21,7 @@ import java.util.List;
 @Setter
 @Entity
 @Table(name = "orders")
-public class OrderEntity {
+class OrderEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "orders_seq")
