@@ -27,7 +27,8 @@ class OrderFacadeTest {
     OrderEntityMapper orderEntityMapper = new OrderEntityMapperImpl();
     OrderRetriever orderRetriever = new OrderRetriever(orderRepository, orderEntityMapper);
     OrderCreator orderCreator = new OrderCreator(menuFacade, orderRepository);
-    OrderFacade orderFacade = new OrderFacade(orderRetriever, orderCreator);
+    OrderUpdater orderUpdater = new OrderUpdater(orderRetriever, menuFacade, orderEntityMapper);
+    OrderFacade orderFacade = new OrderFacade(orderRetriever, orderCreator, orderUpdater);
 
     @Test
     void should_create_order() {
@@ -121,5 +122,94 @@ class OrderFacadeTest {
         // when && then
         OrderNotFoundException exception = assertThrows(OrderNotFoundException.class, () -> orderFacade.getById(id));
         assertThat(exception.getMessage()).isEqualTo("Order not found with id: " + id);
+    }
+
+    @Test
+    void should_exception_when_add_item_to_existing_order_and_quantity_not_positive() {
+        // given
+        when(menuFacade.getMenuItem(1L)).thenReturn(new MenuItemDto(1L, "Pizza", "desc", BigDecimal.valueOf(15), true));
+        OrderCreateRequestDto request = new OrderCreateRequestDto(1,
+                List.of(new OrderItemRequestDto(1L, 2, "no onion")));
+        OrderCreateResponseDto response = orderFacade.createOrder(request);
+        // when && then
+        ValidationItemQuantityException exception = assertThrows(ValidationItemQuantityException.class, () -> orderFacade.addItemToOrder(response.id(), new OrderItemRequestDto(1L, 0, null)));
+        assertThat(exception.getMessage()).isEqualTo("Quantity must be greater than 0");
+    }
+
+    @Test
+    void should_add_item_to_existing_order() {
+        // given
+        when(menuFacade.getMenuItem(1L)).thenReturn(new MenuItemDto(1L, "Pizza", "desc", BigDecimal.valueOf(15), true));
+        when(menuFacade.getMenuItem(2L)).thenReturn(new MenuItemDto(2L, "Coffee", "desc", BigDecimal.valueOf(5), true));
+
+        OrderCreateRequestDto request = new OrderCreateRequestDto(1,
+                List.of(new OrderItemRequestDto(1L, 2, "no onion")));
+        OrderCreateResponseDto response = orderFacade.createOrder(request);
+
+        OrderDto order = orderFacade.getById(response.id());
+
+        assertThat(order.items()).hasSize(1);
+        assertThat(order.totalPrice()).isEqualTo(BigDecimal.valueOf(30));
+        // when
+        OrderItemRequestDto newRequest = new OrderItemRequestDto(2L, 1, null);
+        OrderDto updatedOrder = orderFacade.addItemToOrder(response.id(), newRequest);
+        // then
+        assertThat(updatedOrder.items()).hasSize(2);
+        assertThat(updatedOrder.totalPrice()).isEqualTo(BigDecimal.valueOf(35));
+    }
+
+    @Test
+    void should_save_note_when_item_exists_and_note_exists() {
+        // given
+        when(menuFacade.getMenuItem(1L)).thenReturn(new MenuItemDto(1L, "Pizza", "desc", BigDecimal.valueOf(15), true));
+
+        String firstNote = "first note";
+        String secondNote = "second note";
+
+        OrderCreateRequestDto request = new OrderCreateRequestDto(1,
+                List.of(new OrderItemRequestDto(1L, 2, firstNote)));
+        OrderCreateResponseDto response = orderFacade.createOrder(request);
+        // when
+        OrderItemRequestDto newRequest = new OrderItemRequestDto(1L, 1, secondNote);
+        orderFacade.addItemToOrder(response.id(), newRequest);
+        // then
+        OrderDto order = orderFacade.getById(response.id());
+
+        assertThat(order.items()).hasSize(1);
+        assertThat(order.items().get(0).note()).isEqualTo(firstNote + "\n" + secondNote);
+        assertThat(order.totalPrice()).isEqualTo(BigDecimal.valueOf(45));
+    }
+
+    @Test
+    void should_set_note_when_existing_item_has_no_note() {
+        // given
+        when(menuFacade.getMenuItem(1L)).thenReturn(new MenuItemDto(1L, "Pizza", "desc", BigDecimal.valueOf(15), true));
+
+        OrderCreateRequestDto request = new OrderCreateRequestDto(1,
+                List.of(new OrderItemRequestDto(1L, 2, null)));
+        OrderCreateResponseDto response = orderFacade.createOrder(request);
+        // when
+        OrderItemRequestDto newRequest = new OrderItemRequestDto(1L, 1, "note");
+        orderFacade.addItemToOrder(response.id(), newRequest);
+        // then
+        OrderDto order = orderFacade.getById(response.id());
+
+        assertThat(order.items()).hasSize(1);
+        assertThat(order.items().get(0).note()).isEqualTo("note");
+        assertThat(order.totalPrice()).isEqualTo(BigDecimal.valueOf(45));
+    }
+
+    @Test
+    void should_increase_quantity_when_item_already_exists() {
+        // given
+        when(menuFacade.getMenuItem(1L)).thenReturn(new MenuItemDto(1L, "Pizza", "desc", BigDecimal.valueOf(10), true));
+        OrderCreateResponseDto response = orderFacade.createOrder(new OrderCreateRequestDto(1, List.of(new OrderItemRequestDto(1L, 2, null))));
+        // when
+        orderFacade.addItemToOrder(response.id(), new OrderItemRequestDto(1L, 3, null));
+        // then
+        OrderDto order = orderFacade.getById(response.id());
+
+        assertThat(order.items()).hasSize(1);
+        assertThat(order.items().get(0).quantity()).isEqualTo(5);
     }
 }

@@ -17,4 +17,9 @@ class OrderRetriever {
                 .orElseThrow(() -> new OrderNotFoundException(idOrder));
         return orderEntityMapper.toOrderEntityDto(orderEntity);
     }
+
+    OrderEntity getOrderEntity(Long idOrder) {
+        return orderRepository.findById(idOrder)
+                .orElseThrow(() -> new OrderNotFoundException(idOrder));
+    }
 }
