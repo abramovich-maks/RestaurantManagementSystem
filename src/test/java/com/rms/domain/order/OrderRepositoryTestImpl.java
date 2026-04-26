@@ -116,7 +116,7 @@ class OrderRepositoryTestImpl implements OrderRepository {
 
     @Override
     public Optional<OrderEntity> findById(final Long aLong) {
-        return Optional.empty();
+        return Optional.ofNullable(database.get(aLong));
     }
 
     @Override

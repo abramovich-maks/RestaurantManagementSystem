@@ -5,6 +5,7 @@ import com.rms.domain.menu.MenuItemNotFoundException;
 import com.rms.domain.menu.dto.MenuItemDto;
 import com.rms.domain.order.dto.OrderCreateRequestDto;
 import com.rms.domain.order.dto.OrderCreateResponseDto;
+import com.rms.domain.order.dto.OrderDto;
 import com.rms.domain.order.dto.OrderItemDto;
 import com.rms.domain.order.dto.OrderItemRequestDto;
 import org.junit.jupiter.api.Test;
@@ -92,5 +93,33 @@ class OrderFacadeTest {
 
         assertThatThrownBy(() -> orderFacade.createOrder(request))
                 .isInstanceOf(MenuItemNotFoundException.class);
+    }
+
+    @Test
+    void should_get_order_by_id() {
+        // given
+        when(menuFacade.getMenuItem(1L)).thenReturn(new MenuItemDto(1L, "Pizza", "desc", BigDecimal.valueOf(15), true));
+        OrderCreateRequestDto request = new OrderCreateRequestDto(1,
+                List.of(new OrderItemRequestDto(1L, 2, "no onion")));
+        OrderCreateResponseDto response = orderFacade.createOrder(request);
+        // when
+        OrderDto order = orderFacade.getById(response.id());
+        // then
+        assertThat(order.id()).isEqualTo(response.id());
+        assertThat(order.tableNumber()).isEqualTo(response.tableNumber());
+        assertThat(order.items()).hasSize(1);
+
+        OrderItemDto item = order.items().get(0);
+        assertThat(item.name()).isEqualTo("Pizza");
+        assertThat(item.quantity()).isEqualTo(2);
+    }
+
+    @Test
+    void should_exception_when_order_not_found() {
+        // given
+        long id = 1L;
+        // when && then
+        OrderNotFoundException exception = assertThrows(OrderNotFoundException.class, () -> orderFacade.getById(id));
+        assertThat(exception.getMessage()).isEqualTo("Order not found with id: " + id);
     }
 }
