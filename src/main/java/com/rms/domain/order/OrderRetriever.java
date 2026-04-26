@@ -14,7 +14,7 @@ class OrderRetriever {
 
     OrderDto getOrder(Long idOrder) {
         OrderEntity orderEntity = orderRepository.findById(idOrder)
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + idOrder));
+                .orElseThrow(() -> new OrderNotFoundException(idOrder));
         return orderEntityMapper.toOrderEntityDto(orderEntity);
     }
 }
