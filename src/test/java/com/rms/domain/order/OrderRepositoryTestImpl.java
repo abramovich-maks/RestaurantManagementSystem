@@ -17,6 +17,7 @@ class OrderRepositoryTestImpl implements OrderRepository {
 
     private final Map<Long, OrderEntity> database = new ConcurrentHashMap<>();
     private final AtomicLong index = new AtomicLong(1);
+    private final AtomicLong orderItemIndex = new AtomicLong(1);
 
     @Override
     public void flush() {
@@ -104,6 +105,11 @@ class OrderRepositoryTestImpl implements OrderRepository {
         if (entity.getId() == null) {
             long id = index.getAndIncrement();
             entity.setId(id);
+        }
+        for (OrderItemEntity item : entity.getItems()) {
+            if (item.getId() == null) {
+                item.setId(orderItemIndex.getAndIncrement());
+            }
         }
         database.put(entity.getId(), entity);
         return entity;

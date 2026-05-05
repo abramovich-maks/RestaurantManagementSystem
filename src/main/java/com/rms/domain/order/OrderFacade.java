@@ -26,4 +26,8 @@ public class OrderFacade {
     public OrderDto addItemToOrder(Long orderId, OrderItemRequestDto request) {
         return orderUpdater.addItem(orderId, request);
     }
+
+    public OrderDto removeItemFromOrder(Long orderId, Long itemId) {
+        return orderUpdater.removeItem(orderId, itemId);
+    }
 }

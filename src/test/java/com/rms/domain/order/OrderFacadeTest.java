@@ -212,4 +212,50 @@ class OrderFacadeTest {
         assertThat(order.items()).hasSize(1);
         assertThat(order.items().get(0).quantity()).isEqualTo(5);
     }
+
+    @Test
+    void should_remove_item_from_existing_order() {
+        // given
+        when(menuFacade.getMenuItem(1L)).thenReturn(new MenuItemDto(1L, "Pizza", "desc", BigDecimal.valueOf(15), true));
+        when(menuFacade.getMenuItem(2L)).thenReturn(new MenuItemDto(2L, "Coffee", "desc", BigDecimal.valueOf(5), true));
+
+        OrderCreateRequestDto request = new OrderCreateRequestDto(1,
+                List.of(new OrderItemRequestDto(1L, 2, null),
+                        new OrderItemRequestDto(2L, 2, null)));
+
+        OrderCreateResponseDto response = orderFacade.createOrder(request);
+
+        OrderDto order = orderFacade.getById(response.id());
+
+        assertThat(order.items()).hasSize(2);
+        assertThat(order.totalPrice()).isEqualTo(BigDecimal.valueOf(40));
+
+        // when
+        Long orderItemId = order.items().get(1).id();
+        OrderDto updatedOrder = orderFacade.removeItemFromOrder(response.id(), orderItemId);
+        // then
+        assertThat(updatedOrder.items()).hasSize(1);
+        assertThat(updatedOrder.totalPrice()).isEqualTo(BigDecimal.valueOf(30));
+    }
+
+    @Test
+    void should_exception_when_order_not_contain_item() {
+        // given
+        when(menuFacade.getMenuItem(1L)).thenReturn(new MenuItemDto(1L, "Pizza", "desc", BigDecimal.valueOf(15), true));
+
+        OrderCreateRequestDto request = new OrderCreateRequestDto(1,
+                List.of(new OrderItemRequestDto(1L, 2, null)));
+
+        OrderCreateResponseDto response = orderFacade.createOrder(request);
+
+        OrderDto order = orderFacade.getById(response.id());
+
+        assertThat(order.items()).hasSize(1);
+        assertThat(order.totalPrice()).isEqualTo(BigDecimal.valueOf(30));
+
+        // when && then
+        Long notExistItemId = 99L;
+        OrderItemNotFoundException exception = assertThrows(OrderItemNotFoundException.class, () -> orderFacade.removeItemFromOrder(response.id(), notExistItemId));
+        assertThat(exception.getMessage()).isEqualTo("Order with id: 1 does not contain item with id: 99");
+    }
 }

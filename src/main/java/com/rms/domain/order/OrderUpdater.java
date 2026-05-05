@@ -52,12 +52,30 @@ class OrderUpdater {
             order.addItem(newItem);
         }
 
+        recalculateTotalPrice(order);
+
+        return orderEntityMapper.toOrderEntityDto(order);
+    }
+
+    @Transactional
+    OrderDto removeItem(final Long orderId, final Long itemId) {
+        OrderEntity order = orderRetriever.getOrderEntity(orderId);
+        OrderItemEntity orderItemEntity = order.getItems().stream()
+                .filter(item -> item.getId().equals(itemId))
+                .findFirst()
+                .orElseThrow(() -> new OrderItemNotFoundException(orderId, itemId));
+        order.removeItem(orderItemEntity);
+
+        recalculateTotalPrice(order);
+
+        return orderEntityMapper.toOrderEntityDto(order);
+    }
+
+    private static void recalculateTotalPrice(final OrderEntity order) {
         BigDecimal total = order.getItems().stream()
                 .map(item -> item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         order.setTotalPrice(total);
-
-        return orderEntityMapper.toOrderEntityDto(order);
     }
 }
